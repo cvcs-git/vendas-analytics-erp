@@ -1,0 +1,5 @@
+venv/
+data/raw/
+vendas.db
+__pycache__/
+*.pyc
