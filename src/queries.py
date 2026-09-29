@@ -46,7 +46,37 @@ def ranking_clientes():
     """
     return executar_query(sql)
 
+def faturamento_bruto_liquido():
+    sql = """
+    SELECT strftime('%Y-%m', "Emissão") AS mes,
+           SUM(CASE WHEN Total > 0 THEN Total ELSE 0 END) AS bruto,
+           SUM(CASE WHEN Total < 0 THEN Total ELSE 0 END) AS cancelado,
+           SUM(Total) AS liquido,
+           COUNT(DISTINCT CASE WHEN Total > 0 THEN Nota END) AS notas_venda,
+           COUNT(DISTINCT CASE WHEN Total < 0 THEN Nota END) AS notas_cancelamento,
+           ROUND(SUM(CASE WHEN Total > 0 THEN Total ELSE 0 END) / COUNT(DISTINCT CASE WHEN Total > 0 THEN Nota END), 2) AS ticket_medio_bruto
+    FROM vendas
+    GROUP BY mes
+    ORDER BY mes
+    """
+    return executar_query(sql)
+
+def desempenho_vendedores():
+    sql = """
+    SELECT Vendedor,
+           SUM(CASE WHEN Total > 0 THEN Total ELSE 0 END) AS bruto,
+           SUM(CASE WHEN Total < 0 THEN Total ELSE 0 END) AS cancelado,
+           SUM(Total) AS liquido,
+           COUNT(DISTINCT CASE WHEN Total > 0 THEN Nota END) AS notas_venda,
+           COUNT (DISTINCT "Razão Social") AS clientes,
+           ROUND(SUM(Total) * 100.0 / (SELECT SUM(Total) FROM vendas), 1) AS pct_do_total
+    FROM vendas
+    GROUP BY Vendedor
+    ORDER BY liquido DESC
+    """
+    return executar_query(sql)
+
 if __name__ == "__main__":
     pd.set_option("display.max_columns", None)
     pd.set_option("display.width", 250)
-    print(ranking_clientes())
+    print(desempenho_vendedores())
