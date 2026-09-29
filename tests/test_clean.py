@@ -20,3 +20,9 @@ def test_parse_descricao_dosadora_r2():
     assert produto_base == "DOSADORA R2 ROSCA DUPLA 28/43"
     assert medida == "28/43"
     assert cor == "VERMELHO"
+
+def test_valores_verif_quantidade_com_ponto_de_milhar():
+    entrada = pd.Series(["-150.000", "1400000"])
+    resultado = valores_verif(entrada)
+    assert resultado[0] == - 150000.0
+    assert resultado[1] == 1400000.0
