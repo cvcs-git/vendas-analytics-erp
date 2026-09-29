@@ -31,7 +31,7 @@ def parse_descricao(texto):
 
 
 def limpar_vendas(caminho_csv):
-    df = pd.read_csv(caminho_csv, sep=";", encoding="UTF-8")
+    df = pd.read_csv(caminho_csv, sep=";", encoding="UTF-8", dtype={"Valor": str, "Total": str, "Total NF": str, "Qnt": str})
 
     df["Valor"] = valores_verif(df["Valor"])
     df["Total"] = valores_verif(df["Total"])
