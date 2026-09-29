@@ -1,0 +1,52 @@
+import sqlite3
+import pandas as pd
+
+
+def executar_query(sql):
+    conexao = sqlite3.connect("vendas.db")
+    df = pd.read_sql_query(sql, conexao)
+    conexao.close()
+    return df
+
+
+def ranking_produtos():
+    sql = """
+    SELECT produto_base,
+           SUM(Total) AS faturamento,
+           CAST(SUM(Qnt) AS INTEGER) AS unidades,
+           ROUND(SUM(Total) * 100.0 / (SELECT SUM(Total) FROM vendas), 1) AS pct_do_total
+    FROM vendas
+    GROUP BY produto_base
+    ORDER BY faturamento DESC
+    LIMIT 10
+    """
+    return executar_query(sql)
+
+def faturamento_mensal():
+    sql = """
+    SELECT strftime('%Y-%m', "Emissão") AS mes,
+           SUM(Total) AS faturamento,
+           COUNT(DISTINCT Nota) AS qtd_notas
+    FROM vendas
+    GROUP BY mes
+    ORDER BY mes
+    """
+    return executar_query(sql)
+
+def ranking_clientes():
+    sql = """
+    SELECT "Razão Social",
+           SUM(Total) AS faturamento,
+           COUNT(DISTINCT Nota) AS qtd_notas,
+           ROUND(SUM(Total) * 100.0 / (SELECT SUM(Total) FROM vendas), 1) AS pct_do_total
+    FROM vendas
+    GROUP BY "Razão Social"
+    ORDER BY faturamento DESC
+    LIMIT 10
+    """
+    return executar_query(sql)
+
+if __name__ == "__main__":
+    pd.set_option("display.max_columns", None)
+    pd.set_option("display.width", 250)
+    print(ranking_clientes())

@@ -36,7 +36,7 @@ def limpar_vendas(caminho_csv):
     df["Valor"] = valores_verif(df["Valor"])
     df["Total"] = valores_verif(df["Total"])
     df["Total NF"] = valores_verif(df["Total NF"])
-
+    df["Qnt"] = valores_verif(df["Qnt"])
     df["Emissão"] = pd.to_datetime(df["Emissão"], format="%d/%m/%Y %H:%M:%S")
 
     tem_cor = df["Descrição"].str.contains("::")
