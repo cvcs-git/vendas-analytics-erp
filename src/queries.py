@@ -1,9 +1,11 @@
 import sqlite3
 import pandas as pd
+import sys
 
+CAMINHO_DB = "vendas.db"
 
 def executar_query(sql):
-    conexao = sqlite3.connect("vendas.db")
+    conexao = sqlite3.connect(CAMINHO_DB)
     df = pd.read_sql_query(sql, conexao)
     conexao.close()
     return df
@@ -77,6 +79,8 @@ def desempenho_vendedores():
     return executar_query(sql)
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        CAMINHO_DB = sys.argv[1]
     pd.set_option("display.max_columns", None)
     pd.set_option("display.width", 250)
     print(desempenho_vendedores())
