@@ -27,8 +27,13 @@ def ranking_produtos():
 def faturamento_mensal():
     sql = """
     SELECT strftime('%Y-%m', "Emissão") AS mes,
-           SUM(Total) AS faturamento,
-           COUNT(DISTINCT Nota) AS qtd_notas
+           ROUND(SUM(CASE WHEN Total > 0 THEN Total ELSE 0 END), 2) AS bruto,
+           ROUND(SUM(CASE WHEN Total < 0 THEN Total ELSE 0 END), 2) AS cancelado,
+           ROUND(SUM(Total), 2) AS liquido,
+           COUNT(DISTINCT CASE WHEN Total > 0 THEN Nota END) AS notas_venda,
+           COUNT(DISTINCT CASE WHEN Total < 0 THEN Nota END) AS notas_cancelamento,
+           ROUND(-SUM(CASE WHEN Total < 0 THEN Total ELSE 0 END) * 100.0
+                 / SUM(CASE WHEN Total > 0 THEN Total ELSE 0 END), 1) AS pct_cancelado
     FROM vendas
     GROUP BY mes
     ORDER BY mes
