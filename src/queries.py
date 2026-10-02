@@ -83,6 +83,25 @@ def desempenho_vendedores():
     """
     return executar_query(sql)
 
+def concentracao_clientes():
+    sql = """
+    WITH por_cliente AS (
+        SELECT "Razão Social" AS cliente,
+               ROUND(SUM(Total), 2) AS liquido
+        FROM vendas
+        GROUP BY "Razão Social"
+    )
+    SELECT ROW_NUMBER() OVER (ORDER BY liquido DESC) AS posicao,
+           cliente,
+           liquido,
+           ROUND(liquido * 100.0 / SUM(liquido) OVER (), 1) AS pct,
+           ROUND(SUM(liquido) OVER (ORDER BY liquido DESC ROWS UNBOUNDED PRECEDING) * 100.0
+                 / SUM(liquido) OVER (), 1) AS pct_acumulado
+    FROM por_cliente
+    ORDER BY liquido DESC
+    """
+    return executar_query(sql)
+
 def cancelamentos_reemissoes():
     sql = """
     WITH notas AS (
@@ -127,6 +146,21 @@ def cancelamentos_reemissoes():
     LEFT JOIN notas o ON o.Nota = p.nota_original
     LEFT JOIN notas r ON r.Nota = p.nota_reemissao
     ORDER BY p.emissao
+    """
+    return executar_query(sql)
+
+def resumo_geral():
+    sql = """
+    SELECT MIN(date("Emissão")) AS inicio,
+           MAX(date("Emissão")) AS fim,
+           ROUND(SUM(CASE WHEN Total > 0 THEN Total ELSE 0 END), 2) AS bruto,
+           ROUND(SUM(CASE WHEN Total < 0 THEN Total ELSE 0 END), 2) AS cancelado,
+           ROUND(SUM(Total), 2) AS liquido,
+           COUNT(DISTINCT CASE WHEN Total > 0 THEN Nota END) AS notas_venda,
+           COUNT(DISTINCT CASE WHEN Total > 0 THEN "Razão Social" END) AS clientes,
+           ROUND(SUM(CASE WHEN Total > 0 THEN Total ELSE 0 END)
+                 / COUNT(DISTINCT CASE WHEN Total > 0 THEN Nota END), 2) AS ticket_medio_bruto
+    FROM vendas
     """
     return executar_query(sql)
 
