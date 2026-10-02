@@ -83,6 +83,53 @@ def desempenho_vendedores():
     """
     return executar_query(sql)
 
+def cancelamentos_reemissoes():
+    sql = """
+    WITH notas AS (
+        SELECT Nota,
+               "Razão Social" AS cliente,
+               MIN("Emissão") AS emissao,
+               ROUND(SUM(Total), 2) AS valor
+        FROM vendas
+        GROUP BY Nota, "Razão Social"
+    ),
+    cancelamentos AS (
+        SELECT * FROM notas WHERE valor < 0
+    ),
+    pares AS (
+        SELECT c.*,
+               (SELECT n.Nota
+                FROM notas n
+                WHERE n.cliente = c.cliente
+                  AND n.valor = -c.valor
+                  AND n.emissao < c.emissao
+                ORDER BY n.emissao DESC
+                LIMIT 1) AS nota_original,
+               (SELECT n.Nota
+                FROM notas n
+                WHERE n.cliente = c.cliente
+                  AND n.valor = -c.valor
+                  AND n.emissao > c.emissao
+                ORDER BY n.emissao
+                LIMIT 1) AS nota_reemissao
+        FROM cancelamentos c
+    )
+    SELECT p.Nota AS nota_cancelamento,
+           p.cliente,
+           p.emissao AS data_cancelamento,
+           p.valor AS valor_cancelado,
+           p.nota_original,
+           o.emissao AS data_original,
+           p.nota_reemissao,
+           r.emissao AS data_reemissao,
+           ROUND(julianday(r.emissao) - julianday(p.emissao), 1) AS dias_ate_reemissao
+    FROM pares p
+    LEFT JOIN notas o ON o.Nota = p.nota_original
+    LEFT JOIN notas r ON r.Nota = p.nota_reemissao
+    ORDER BY p.emissao
+    """
+    return executar_query(sql)
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         CAMINHO_DB = sys.argv[1]
